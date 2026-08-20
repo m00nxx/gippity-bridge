@@ -251,7 +251,7 @@
           defaultValue: "server image output dir",
           meaning: "Directory where generated images are saved.",
           recommended:
-            "Use a mounted volume in Docker, for example /data/chatgpt-api/images.",
+            "Use a mounted volume in Docker, for example /data/gippity-bridge/images.",
           gotcha:
             "LAN users need Public base URL configured or the returned 127.0.0.1 URL will point at their own machine.",
         },
@@ -1890,7 +1890,7 @@
               {
                 url: `${fileBase}/chatgpt/files/file_cat/cat.png`,
                 download_url: `${fileBase}/chatgpt/files/file_cat/cat.png`,
-                path: "/Users/work/Desktop/chatgpt-api/outputs/chatgpt-images/cat.png",
+                path: "/Users/work/Desktop/gippity-bridge/outputs/chatgpt-images/cat.png",
                 filename: "cat.png",
                 content_type: "image/png",
               },
@@ -1917,7 +1917,7 @@
               {
                 url: `${fileBase}/chatgpt/files/file_edit/edited.png`,
                 download_url: `${fileBase}/chatgpt/files/file_edit/edited.png`,
-                path: "/Users/work/Desktop/chatgpt-api/outputs/chatgpt-images/edited.png",
+                path: "/Users/work/Desktop/gippity-bridge/outputs/chatgpt-images/edited.png",
                 filename: "edited.png",
                 content_type: "image/png",
               },
@@ -1979,7 +1979,7 @@
             model: "chatgpt-deep-research",
             chatgpt_account: "research-pro",
             chatgpt_research_report_path:
-              "/Users/work/Desktop/chatgpt-api/outputs/chatgpt-research/agi-report.md",
+              "/Users/work/Desktop/gippity-bridge/outputs/chatgpt-research/agi-report.md",
             chatgpt_research_report_download_url: `${fileBase}/chatgpt/files/file_report/agi-report.md`,
             choices: [
               {
@@ -2359,7 +2359,7 @@
         title: "Same machine",
         body: "Use path when your app runs on the same machine as the API server. This is fastest for local scripts.",
         example:
-          "/Users/work/Desktop/chatgpt-api/outputs/chatgpt-images/cat.png",
+          "/Users/work/Desktop/gippity-bridge/outputs/chatgpt-images/cat.png",
       },
       {
         title: "Browser or LAN client",
@@ -2866,7 +2866,7 @@
     return [
       {
         id: "launch",
-        title: "Launch bridge",
+        title: "Launch Gippity",
         detail: "Copy the full API serve command and open launch settings.",
         run: () => void launchBridge(),
       },
@@ -2909,7 +2909,7 @@
         provider: {
           chatgptWeb: {
             npm: "@ai-sdk/openai-compatible",
-            name: "ChatGPT Web Bridge",
+            name: "Gippity Bridge",
             options: {
               baseURL: baseUrl,
               apiKey: apiKey || DEFAULT_API_KEY,
@@ -2931,10 +2931,10 @@
 <div class="console-shell text-slate-100">
   <header class="console-topbar">
     <div class="console-brand">
-      <div class="brand-mark">WB</div>
+      <div class="brand-mark">GB</div>
       <div class="min-w-0">
-        <p class="brand-kicker">bridge control plane</p>
-        <h1>Web Bridge Console</h1>
+        <p class="brand-kicker">local AI control plane</p>
+        <h1>Gippity Console</h1>
       </div>
     </div>
 
@@ -2958,7 +2958,7 @@
 
     <div class="top-actions">
       <button class="top-action primary" onclick={launchBridge}>
-        Launch Bridge
+        Launch Gippity
       </button>
       <button class="top-action" onclick={refreshAll}>Refresh</button>
       <button class="top-action" onclick={() => checkAccounts()}>
@@ -4289,7 +4289,7 @@
               This only tells this console which bridge API to call. It does not
               start the API server or change ChatGPT accounts.
             </p>
-            <Input label="Bridge API base URL" bind:value={baseUrl} />
+            <Input label="Gippity API base URL" bind:value={baseUrl} />
             <Input label="Bearer key" bind:value={apiKey} />
             <div class="mt-4 flex flex-wrap gap-2">
               <button
@@ -4572,7 +4572,7 @@
                     </button>
                     <button
                       class="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-black"
-                      onclick={() => quickOutputRoot("/data/chatgpt-api")}
+                      onclick={() => quickOutputRoot("/data/gippity-bridge")}
                     >
                       docker /data
                     </button>

@@ -1,4 +1,4 @@
-# Project Analysis And Open Source Maintainer Notes
+# Gippity Bridge maintainer notes
 
 This document is the maintainer-level map of the project. It explains what the
 repo is, what each surface owns, what changed during the open-source cleanup,
@@ -7,7 +7,7 @@ next.
 
 ## Product Intent
 
-`chatgpt-api` is a local bridge framework. It lets a user run a local API that
+Gippity Bridge is a local bridge framework. It lets a user run a local API that
 looks close enough to common OpenAI client conventions for development, while
 using ChatGPT Web browser sessions as the first provider target.
 
@@ -70,7 +70,8 @@ apps/*/dist             Generated static build output. Never commit.
 
 ### Python CLI
 
-The `chatgpt-api` command is the operator entrypoint. It supports direct
+The `gippity-bridge` command is the operator entrypoint. The legacy
+`chatgpt-api` alias remains available for compatibility. The CLI supports direct
 provider actions and remote admin calls against a running API.
 
 Primary commands:
@@ -83,9 +84,9 @@ python3 -m chatgpt_api server command --preset local --port 8010 --account-strat
 python3 -m chatgpt_api server start --api-key local-dev-key
 python3 -m chatgpt_api admin status --base-url http://127.0.0.1:8000/v1 --api-key local-dev-key
 python3 -m chatgpt_api admin account add --account main-free --capture-file ./chatgpt-request.txt
-chatgpt-api admin account update --account main-free --capture-file ./chatgpt-request.txt
-chatgpt-api admin account verify --account all
-chatgpt-api admin account delete --account old-free
+gippity-bridge admin account update --account main-free --capture-file ./chatgpt-request.txt
+gippity-bridge admin account verify --account all
+gippity-bridge admin account delete --account old-free
 python3 -m chatgpt_api api chat --message "hello" --accounts main-free,image-pro --account-strategy random --base-url http://127.0.0.1:8000/v1 --api-key local-dev-key
 python3 -m chatgpt_api api image --prompt "small icon" --output-dir ./outputs/manual-images --base-url http://127.0.0.1:8000/v1 --api-key local-dev-key
 python3 -m chatgpt_api api vision --mode ocr --input-image ./panel.png --prompt "Extract text" --base-url http://127.0.0.1:8000/v1 --api-key local-dev-key
@@ -111,7 +112,7 @@ They are not automatic plan selectors.
 That split is mechanical but should be done after the public command contract is
 stable, because import movement can easily break console and Docker docs.
 
-### Local Bridge API
+### Gippity API
 
 The local API listens on `http://127.0.0.1:8000` by default and exposes a `/v1`
 base path for client compatibility.
@@ -134,7 +135,7 @@ POST /v1/chatgpt/operations/{operation_id}/cancel
 Admin paths live under `/v1/chatgpt/admin/*`. They are intentionally local
 operator endpoints, not stable public client endpoints.
 
-### Bridge Console
+### Gippity Console
 
 `apps/bridge-console` is the operator control plane. It should answer these
 questions quickly:
@@ -554,7 +555,7 @@ Responses usually include:
 
 ```json
 {
-  "path": "/Users/work/Desktop/chatgpt-api/outputs/chatgpt-images/example.png",
+  "path": "/Users/work/Desktop/gippity-bridge/outputs/chatgpt-images/example.png",
   "download_url": "http://127.0.0.1:8000/v1/chatgpt/files/chgptfile_x/example.png"
 }
 ```
@@ -606,8 +607,8 @@ Research cancel can send the MCP stop call immediately.
 Compose runs three production-style services:
 
 ```text
-chatgpt-api      http://127.0.0.1:8000
-bridge-console   http://127.0.0.1:8080
+gippity-api      http://127.0.0.1:8000
+gippity-console  http://127.0.0.1:8080
 character-game   http://127.0.0.1:3000
 ```
 

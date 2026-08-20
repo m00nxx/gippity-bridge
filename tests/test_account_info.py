@@ -151,6 +151,18 @@ def test_infer_account_capabilities_hides_auto_alias_for_free():
     assert capabilities["extra_observed_models"] == []
 
 
+def test_infer_plus_gpt_5_6_supports_web_reasoning_efforts():
+    info = detect_account_info(CapturedRequest(request_json={"action": "next", "model": "gpt-5-6"}))
+    info.plan_type = "plus"
+    info.plan_bucket = "paid"
+
+    capabilities = infer_account_capabilities(info)
+
+    assert "gpt-5-6" in capabilities["supported_models"]
+    assert capabilities["default_model"] == "gpt-5-6"
+    assert capabilities["backend_reasoning_efforts"] == ["instant", "medium", "high"]
+
+
 def test_load_settings_file(tmp_path):
     path = tmp_path / "settings.json"
     path.write_text('{"settings":{"wingman_thinking_effort":"instant"}}', encoding="utf-8")

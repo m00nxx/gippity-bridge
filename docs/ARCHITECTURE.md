@@ -1,4 +1,4 @@
-# Architecture
+# Gippity Bridge architecture
 
 This project should stay provider-first, not opencode-first.
 
@@ -39,7 +39,7 @@ There are three useful ways to use the project:
 2. OpenAI-shaped local API for any client:
 
    ```sh
-   chatgpt-api serve --host 127.0.0.1 --port 8000
+   gippity-bridge serve --host 127.0.0.1 --port 8000
    ```
 
    This exposes `/v1/models` and `/v1/chat/completions` so OpenAI-shaped

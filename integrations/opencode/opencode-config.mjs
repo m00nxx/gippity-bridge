@@ -115,7 +115,7 @@ async function promptForConfig(defaults) {
     line("Action", action);
     console.log("");
 
-    const nextBaseUrl = await ask(rl, "Bridge API base URL", defaults.baseUrl);
+    const nextBaseUrl = await ask(rl, "Gippity API base URL", defaults.baseUrl);
     const nextApiKey =
       action === "eject"
         ? defaults.apiKey
@@ -146,7 +146,7 @@ async function selectAction() {
     {
       value: "inject",
       title: "Inject",
-      body: "Write opencode provider config that points at the bridge API.",
+      body: "Write OpenCode provider config that points at Gippity Bridge.",
     },
     {
       value: "eject",
@@ -274,7 +274,7 @@ function printConnectionHelp(baseUrl) {
   line("Tried", baseUrl);
   console.log("");
   console.log(
-    `${ansi.yellow}Start the bridge API first, then rerun this opencode config command.${ansi.reset}\n`,
+    `${ansi.yellow}Start Gippity Bridge first, then rerun this OpenCode config command.${ansi.reset}\n`,
   );
   console.log("Local dev:");
   console.log(
@@ -299,7 +299,7 @@ function printError(message) {
 
 function header(title) {
   console.log(
-    `${ansi.bold}${ansi.cyan}ChatGPT Web Bridge${ansi.reset} ${ansi.bold}${title}${ansi.reset}`,
+    `${ansi.bold}${ansi.cyan}Gippity Bridge${ansi.reset} ${ansi.bold}${title}${ansi.reset}`,
   );
   console.log(
     `${ansi.dim}Only writes/removes opencode consumer config. It does not configure accounts or start the API server.${ansi.reset}\n`,

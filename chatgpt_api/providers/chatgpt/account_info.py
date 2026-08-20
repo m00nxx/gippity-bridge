@@ -16,6 +16,7 @@ PROFILE_CLAIMS_KEY = "https://api.openai.com/profile"
 CORE_MODEL = "gpt-5-5"
 THINKING_MODEL = "gpt-5-5-thinking"
 PRO_MODEL = "gpt-5-5-pro"
+SOL_MODEL = "gpt-5-6"
 MODEL_ALIASES = {"auto"}
 PRIMARY_SUPPORTED_MODELS = [CORE_MODEL, THINKING_MODEL, PRO_MODEL]
 AUTO_ONLY_PLAN_TYPES = {"free", "go"}
@@ -24,6 +25,7 @@ PLAN_TYPES_WITH_THINKING_MODEL = {"plus", "pro", "team", "enterprise", "edu"}
 PLAN_TYPES_WITH_PRO_MODEL = {"pro"}
 DEFAULT_PRO_EFFORTS = ["standard", "extended"]
 DEFAULT_THINKING_EFFORTS = ["standard", "extended", "max"]
+DEFAULT_BACKEND_REASONING_EFFORTS = ["instant", "medium", "high"]
 
 
 @dataclass(slots=True)
@@ -101,6 +103,8 @@ def infer_account_capabilities(info: ChatGPTAccountInfo) -> dict[str, Any]:
 
     if CORE_MODEL in observed and plan_type not in AUTO_ONLY_PLAN_TYPES:
         _append_unique(supported_models, CORE_MODEL)
+    if SOL_MODEL in observed and plan_type not in AUTO_ONLY_PLAN_TYPES:
+        _append_unique(supported_models, SOL_MODEL)
     if THINKING_MODEL in observed and _allows_thinking_model(info):
         _append_unique(supported_models, THINKING_MODEL)
     if _allows_pro_model(info):
@@ -109,6 +113,12 @@ def infer_account_capabilities(info: ChatGPTAccountInfo) -> dict[str, Any]:
     default_model = _default_supported_model(info, supported_models)
     thinking_efforts = _thinking_efforts(info) if THINKING_MODEL in supported_models else []
     pro_efforts = _pro_efforts(info) if PRO_MODEL in supported_models else []
+    backend_reasoning_efforts: list[str] = []
+    if SOL_MODEL in supported_models:
+        for effort in DEFAULT_BACKEND_REASONING_EFFORTS:
+            _append_unique(backend_reasoning_efforts, effort)
+    for effort in info.settings_available_reasoning_efforts:
+        _append_unique(backend_reasoning_efforts, effort)
 
     return {
         "plan_type": info.plan_type,
@@ -119,7 +129,7 @@ def infer_account_capabilities(info: ChatGPTAccountInfo) -> dict[str, Any]:
         "thinking_efforts": thinking_efforts,
         "pro_model": PRO_MODEL if PRO_MODEL in supported_models else None,
         "pro_efforts": pro_efforts,
-        "backend_reasoning_efforts": info.settings_available_reasoning_efforts,
+        "backend_reasoning_efforts": backend_reasoning_efforts,
         "auto_model": "auto",
         "auto_only": bool(auto_only_reason),
         "auto_only_reason": auto_only_reason,

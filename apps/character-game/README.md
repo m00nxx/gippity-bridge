@@ -1,6 +1,6 @@
 # Arcadia Sessions
 
-Production-style character game reference app for `chatgpt-api`.
+Production-style character game reference app for Gippity Bridge.
 
 This app is intentionally a separate fullstack product layer. It calls the local
 OpenAI-shaped `/v1` server instead of adding game routes to the core
@@ -19,7 +19,7 @@ provider API.
 Start the API server from the repository root:
 
 ```sh
-chatgpt-api serve --host 127.0.0.1 --port 8000
+gippity-bridge serve --host 127.0.0.1 --port 8000
 ```
 
 Then start the app:
@@ -45,7 +45,7 @@ Mock mode is not the product path. The product path is the OpenAI-shaped
 `CHATGAME_OPENAI_BASE_URL`.
 
 In Docker, keep `CHATGAME_OPENAI_BASE_URL` as the internal container URL, such
-as `http://chatgpt-api:8000/v1`, and set
+as `http://gippity-api:8000/v1`, and set
 `CHATGAME_PUBLIC_OPENAI_BASE_URL` to the browser/LAN URL, such as
 `http://127.0.0.1:8000/v1` or `http://192.168.1.203:8000/v1`. The server uses
 the internal URL for fetches; the UI and saved route settings show the public

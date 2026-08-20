@@ -1,6 +1,7 @@
 # CLI
 
-`chatgpt-api` is the operator CLI for the local ChatGPT Web Bridge.
+`gippity-bridge` is the operator CLI for Gippity Bridge. The legacy
+`chatgpt-api` command remains available for compatibility.
 
 Use the module command in docs and automation:
 
@@ -8,12 +9,14 @@ Use the module command in docs and automation:
 python3 -m chatgpt_api <command>
 ```
 
-If your shell can find the installed console script, this shorter form is also
-valid:
+If your shell can find the installed console script, the preferred shorter form
+is:
 
 ```sh
-chatgpt-api <command>
+gippity-bridge <command>
 ```
+
+Existing automation may continue using `chatgpt-api <command>`.
 
 It has four layers:
 
@@ -137,7 +140,7 @@ client, Docker container, opencode adapter, or game frontend will call.
 These commands go through the running API server, so they use the server's
 account router, model aliases, concurrency limits, artifact store, download
 URLs, and operation cancellation. This is different from low-level direct
-provider probe commands such as `chatgpt-api chat` and `chatgpt-api image`,
+provider probe commands such as `gippity-bridge chat` and `gippity-bridge image`,
 which read a local account capture directly.
 
 Every `api` command accepts:
@@ -384,19 +387,19 @@ allowed rather than exhausted.
 List generated images and Deep Research reports:
 
 ```sh
-chatgpt-api admin artifacts --base-url http://127.0.0.1:8000/v1 --api-key local-dev-key
+gippity-bridge admin artifacts --base-url http://127.0.0.1:8000/v1 --api-key local-dev-key
 ```
 
 Delete metadata only:
 
 ```sh
-chatgpt-api admin delete-artifact --file-id <id> --base-url http://127.0.0.1:8000/v1 --api-key local-dev-key
+gippity-bridge admin delete-artifact --file-id <id> --base-url http://127.0.0.1:8000/v1 --api-key local-dev-key
 ```
 
 Delete metadata and file:
 
 ```sh
-chatgpt-api admin delete-artifact --file-id <id> --delete-file --base-url http://127.0.0.1:8000/v1 --api-key local-dev-key
+gippity-bridge admin delete-artifact --file-id <id> --delete-file --base-url http://127.0.0.1:8000/v1 --api-key local-dev-key
 ```
 
 Download files through:
@@ -417,7 +420,7 @@ Use returned `download_url` for browsers or LAN clients. Use returned local
 Chat:
 
 ```sh
-chatgpt-api admin test-chat \
+gippity-bridge admin test-chat \
   --message "Reply with exactly: bridge ok" \
   --base-url http://127.0.0.1:8000/v1 \
   --api-key local-dev-key
@@ -426,7 +429,7 @@ chatgpt-api admin test-chat \
 Image:
 
 ```sh
-chatgpt-api admin test-image \
+gippity-bridge admin test-image \
   --prompt "simple blue app icon, no text" \
   --base-url http://127.0.0.1:8000/v1 \
   --api-key local-dev-key
@@ -495,7 +498,7 @@ produce a different canvas size.
 Models:
 
 ```sh
-chatgpt-api admin models --json --base-url http://127.0.0.1:8000/v1 --api-key local-dev-key
+gippity-bridge admin models --json --base-url http://127.0.0.1:8000/v1 --api-key local-dev-key
 ```
 
 ## Raw Local Capture Tools
@@ -503,11 +506,11 @@ chatgpt-api admin models --json --base-url http://127.0.0.1:8000/v1 --api-key lo
 These do not need the API server:
 
 ```sh
-chatgpt-api accounts
-chatgpt-api inspect-capture --account main-free
-chatgpt-api account-info --account main-free
-chatgpt-api account-capabilities --account main-free
-chatgpt-api account-limits --account main-free
-chatgpt-api account-models --account main-free
-chatgpt-api account-check --account main-free
+gippity-bridge accounts
+gippity-bridge inspect-capture --account main-free
+gippity-bridge account-info --account main-free
+gippity-bridge account-capabilities --account main-free
+gippity-bridge account-limits --account main-free
+gippity-bridge account-models --account main-free
+gippity-bridge account-check --account main-free
 ```

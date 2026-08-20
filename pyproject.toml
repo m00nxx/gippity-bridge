@@ -3,9 +3,9 @@ requires = ["setuptools>=69"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "chatgpt-api"
-version = "0.1.0"
-description = "Provider-first AI chat and image framework with ChatGPT Web as the first target."
+name = "gippity-bridge"
+version = "0.2.0"
+description = "A playful local bridge from ChatGPT Web to OpenAI-shaped apps and OpenCode."
 requires-python = ">=3.11"
 license = { text = "MIT" }
 dependencies = [
@@ -21,7 +21,13 @@ dev = [
 ]
 
 [project.scripts]
+gippity-bridge = "chatgpt_api.cli:main"
 chatgpt-api = "chatgpt_api.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/m00nxx/gippity-bridge"
+Repository = "https://github.com/m00nxx/gippity-bridge"
+Documentation = "https://github.com/m00nxx/gippity-bridge#readme"
 
 [tool.setuptools.packages.find]
 include = ["chatgpt_api*"]

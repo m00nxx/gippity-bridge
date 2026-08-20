@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "chatgpt-bridge-console",
+      "name": "gippity-bridge-console",
       "dependencies": {
         "lucide-svelte": "^1.0.1",
       },

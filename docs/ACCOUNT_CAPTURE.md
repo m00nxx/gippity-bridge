@@ -1,4 +1,4 @@
-# Account Capture Guide
+# Gippity Bridge account capture
 
 This bridge needs one copied ChatGPT Web browser request for each local account.
 That copied request is called an account capture.
@@ -57,7 +57,7 @@ headers, cookies, and JSON body, but they are not documented as supported.
    ```
 
 12. Copy that request using one of the browser-specific methods below.
-13. Paste it into the Bridge Console account modal or CLI paste flow.
+13. Paste it into the Gippity Console account modal or CLI paste flow.
 
 Do not use telemetry requests such as `flush`, `intake`, or `m`. Those are not
 conversation requests and cannot be used as captures.
@@ -228,7 +228,7 @@ redacts secret summaries, and shows missing required pieces before writing.
 Save from a prepared file:
 
 ```sh
-chatgpt-api admin account add \
+gippity-bridge admin account add \
   --account main-free \
   --capture-file ./chatgpt-request.txt \
   --base-url http://127.0.0.1:8000/v1 \
@@ -238,7 +238,7 @@ chatgpt-api admin account add \
 Paste interactively:
 
 ```sh
-chatgpt-api admin account add --paste \
+gippity-bridge admin account add --paste \
   --account main-free \
   --base-url http://127.0.0.1:8000/v1 \
   --api-key local-dev-key
@@ -253,7 +253,7 @@ END_CAPTURE
 Update an existing account after tokens/cookies expire:
 
 ```sh
-chatgpt-api admin account update \
+gippity-bridge admin account update \
   --account main-free \
   --capture-file ./chatgpt-request.txt \
   --base-url http://127.0.0.1:8000/v1 \
@@ -263,7 +263,7 @@ chatgpt-api admin account update \
 Verify all accounts:
 
 ```sh
-chatgpt-api admin account verify \
+gippity-bridge admin account verify \
   --account all \
   --base-url http://127.0.0.1:8000/v1 \
   --api-key local-dev-key
@@ -272,7 +272,7 @@ chatgpt-api admin account verify \
 Delete an account:
 
 ```sh
-chatgpt-api admin account delete \
+gippity-bridge admin account delete \
   --account old-free \
   --base-url http://127.0.0.1:8000/v1 \
   --api-key local-dev-key

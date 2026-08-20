@@ -6,6 +6,7 @@ from chatgpt_api.providers.chatgpt.auth import ChatGPTAuthConfig
 from chatgpt_api.providers.chatgpt.transport import (
     ChatGPTEndpoints,
     ChatGPTWebTransport,
+    _account_setting_headers,
     _conversation_headers,
     _deep_research_confirm_payload,
     _deep_research_mcp_get_state_payload,
@@ -68,6 +69,36 @@ def test_build_next_payload_includes_messages():
     assert payload["thinking_effort"] == "extended"
     assert payload["force_parallel_switch"] == "auto"
     assert payload["paragen_cot_summary_display_override"] == "allow"
+
+
+@pytest.mark.parametrize("effort", ["instant", "medium", "high"])
+def test_build_next_payload_uses_backend_effort_as_account_setting(effort):
+    transport = ChatGPTWebTransport(ChatGPTAuthConfig(access_token="fake"))
+
+    payload = transport.build_chat_payload(
+        ChatRequest(messages=[Message.text("user", "hello")], model="gpt-5-6", thinking_effort=effort)
+    )
+
+    assert "thinking_effort" not in payload
+
+
+def test_account_setting_headers_drop_conversation_routing_and_proof_tokens():
+    headers = _account_setting_headers(
+        {
+            "authorization": "Bearer fake",
+            "cookie": "session=fake",
+            "openai-sentinel-proof-token": "proof",
+            "x-conduit-token": "conduit",
+            "x-openai-target-path": "/backend-api/f/conversation",
+        }
+    )
+
+    assert headers["authorization"] == "Bearer fake"
+    assert headers["cookie"] == "session=fake"
+    assert headers["accept"] == "application/json"
+    assert "openai-sentinel-proof-token" not in headers
+    assert "x-conduit-token" not in headers
+    assert "x-openai-target-path" not in headers
 
 
 def test_prepare_payload_uses_partial_query_for_next_message():

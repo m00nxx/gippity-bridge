@@ -1,4 +1,4 @@
-# Screenshot Evidence
+# Gippity Bridge screenshot evidence
 
 These screenshots are captured from the Docker stack, not static mockups.
 
@@ -6,7 +6,7 @@ These screenshots are captured from the Docker stack, not static mockups.
 
 | File | Source | What it proves |
 | --- | --- | --- |
-| `oss-console-overview.png` | `http://127.0.0.1:8080` | Bridge Console loads from the nginx Docker image, reads API health from `:8000`, shows route capacity, model count, download routes, and operational status. |
+| `oss-console-overview.png` | `http://127.0.0.1:8080` | Gippity Console loads from the nginx Docker image, reads API health from `:8000`, shows route capacity, model count, download routes, and operational status. |
 | `oss-console-accounts.png` | `http://127.0.0.1:8080/#accounts` | Account capture management is exposed as a first-class console page with ASCII account-name validation, capture inspection, update, verify, and delete controls. |
 | `oss-console-docs.png` | `http://127.0.0.1:8080/#api-docs` | Console embeds API route docs with request/response shape guidance, including chat, images, edits, vision/OCR, research, files, admin routes, and cancel routes. |
 | `oss-console-library.png` | `http://127.0.0.1:8080/#storage` | The storage/library plane is separated from runtime controls and is ready to show completed images and research reports with download URLs. |

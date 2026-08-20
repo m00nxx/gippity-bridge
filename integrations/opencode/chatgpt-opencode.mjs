@@ -1040,7 +1040,7 @@ function buildOpencodeConfig(baseConfig, { apiKey, baseURL, model }) {
   config.provider[providerId] = {
     ...templateProvider,
     ...existingProvider,
-    name: existingProvider.name || templateProvider.name || "ChatGPT Web Local",
+    name: existingProvider.name || templateProvider.name || "Gippity Bridge",
     npm: existingProvider.npm || templateProvider.npm || "@ai-sdk/openai-compatible",
     options: {
       ...(templateProvider.options || {}),

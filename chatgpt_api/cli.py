@@ -66,7 +66,7 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="chatgpt-api")
+    parser = argparse.ArgumentParser(prog="gippity-bridge")
     parser.add_argument("--provider", default=os.environ.get("CHAT_PROVIDER", "chatgpt"))
     subparsers = parser.add_subparsers(required=True)
 
@@ -155,7 +155,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     secrets_rotate.set_defaults(func=cmd_secrets_rotate)
 
-    admin = subparsers.add_parser("admin", help="Manage a running Bridge API from CLI or Docker")
+    admin = subparsers.add_parser("admin", help="Manage a running Gippity Bridge API from CLI or Docker")
     admin.add_argument("--base-url", default=os.environ.get("CHATGPT_ADMIN_BASE_URL") or os.environ.get("CHATGPT_BASE_URL") or "http://127.0.0.1:8000/v1")
     admin.add_argument("--api-key", default=os.environ.get("CHATGPT_API_KEY", "local-dev-key"))
     admin_subparsers = admin.add_subparsers(required=True)
@@ -182,7 +182,7 @@ def build_parser() -> argparse.ArgumentParser:
     admin_capacity.add_argument("--json", action="store_true")
     admin_capacity.set_defaults(func=cmd_admin_capacity)
 
-    admin_settings = admin_subparsers.add_parser("settings", help="Show persisted Bridge API settings")
+    admin_settings = admin_subparsers.add_parser("settings", help="Show persisted Gippity Bridge API settings")
     admin_commands.append(admin_settings)
     admin_settings.add_argument("--json", action="store_true")
     admin_settings.set_defaults(func=cmd_admin_settings)
@@ -196,7 +196,7 @@ def build_parser() -> argparse.ArgumentParser:
     admin_limits.add_argument("--json", action="store_true")
     admin_limits.set_defaults(func=cmd_admin_set_limits)
 
-    admin_reset = admin_subparsers.add_parser("reset-settings", help="Reset persisted Bridge API settings to defaults")
+    admin_reset = admin_subparsers.add_parser("reset-settings", help="Reset persisted Gippity Bridge API settings to defaults")
     admin_commands.append(admin_reset)
     admin_reset.add_argument("--json", action="store_true")
     admin_reset.set_defaults(func=cmd_admin_reset_settings)
@@ -349,7 +349,7 @@ def build_parser() -> argparse.ArgumentParser:
         admin_command.add_argument("--base-url", default=argparse.SUPPRESS)
         admin_command.add_argument("--api-key", default=argparse.SUPPRESS)
 
-    api = subparsers.add_parser("api", help="Call the running Bridge API with flexible automation-friendly flags")
+    api = subparsers.add_parser("api", help="Call the running Gippity Bridge API with automation-friendly flags")
     api.add_argument("--base-url", default=_admin_base_url_default())
     api.add_argument("--api-key", default=_admin_api_key_default())
     api.add_argument("--timeout", type=float, default=120.0)
@@ -530,7 +530,7 @@ def build_parser() -> argparse.ArgumentParser:
     probe.add_argument("path", type=Path, nargs="?")
     probe.add_argument("--account", default=None)
     probe.add_argument("--accounts-dir", type=Path, default=None)
-    probe.add_argument("--message", default="hello from chatgpt-api probe")
+    probe.add_argument("--message", default="hello from Gippity Bridge probe")
     probe.add_argument("--model", default="auto")
     probe.add_argument("--conversation-id", default=None)
     probe.add_argument("--transport", choices=["curl_cffi", "httpx"], default="curl_cffi")
@@ -540,10 +540,10 @@ def build_parser() -> argparse.ArgumentParser:
     probe.add_argument("--max-events", type=int, default=12)
     probe.set_defaults(func=cmd_probe_capture)
 
-    server = subparsers.add_parser("server", help="Start or print commands for the main Bridge API server")
+    server = subparsers.add_parser("server", help="Start or print commands for the Gippity Bridge API server")
     server_subparsers = server.add_subparsers(required=True)
 
-    server_start = server_subparsers.add_parser("start", help="Start the main Bridge API server")
+    server_start = server_subparsers.add_parser("start", help="Start the Gippity Bridge API server")
     _add_serve_arguments(server_start)
     server_start.set_defaults(func=cmd_serve)
 
@@ -562,7 +562,7 @@ def build_parser() -> argparse.ArgumentParser:
     server_command.add_argument("--lan-base-url", default=os.environ.get("CHATGPT_PUBLIC_BASE_URL", "http://192.168.1.203:8000/v1"))
     server_command.set_defaults(func=cmd_server_command)
 
-    serve = subparsers.add_parser("serve", help="Run the local ChatGPT Web bridge API server")
+    serve = subparsers.add_parser("serve", help="Run the local Gippity Bridge API server")
     _add_serve_arguments(serve)
     serve.set_defaults(func=cmd_serve)
 
@@ -772,7 +772,7 @@ async def cmd_doctor(args: argparse.Namespace) -> int:
         _print_json(payload)
         return 0 if payload["ok"] else 1
 
-    print(_headline("ChatGPT API Doctor"))
+    print(_headline("Gippity Bridge Doctor"))
     print(f"base_url   {_mono(args.base_url)}")
     print(f"api_key    {'set' if args.api_key else 'not set'}")
     print(f"accounts   {len(profiles)} profile(s)")
@@ -1023,7 +1023,7 @@ def _print_control_menu(args: argparse.Namespace) -> None:
     width = _terminal_width()
     print()
     print(_color("+" + "-" * (width - 2) + "+", "2"))
-    title = " ChatGPT API Control Center "
+    title = " Gippity Bridge Control Center "
     print(_color("|", "2") + _headline(title).ljust(width - 2)[: width - 2] + _color("|", "2"))
     print(_color("+" + "-" * (width - 2) + "+", "2"))
     print(f"  API       {_mono(args.base_url)}")
@@ -1187,7 +1187,7 @@ async def cmd_server_command(args: argparse.Namespace) -> int:
         print(
             f"docker run --rm -p {port}:8000 --env-file .env "
             "-v \"$PWD/secrets/accounts:/data/secrets/accounts\" "
-            "-v \"$PWD/outputs:/data/outputs\" chatgpt-api:local"
+            "-v \"$PWD/outputs:/data/outputs\" gippity-bridge:local"
         )
         return 0
     if args.preset == "lan":

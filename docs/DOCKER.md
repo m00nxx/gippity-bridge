@@ -1,9 +1,9 @@
-# Docker
+# Gippity Bridge with Docker
 
 The Compose stack runs three services:
 
-- `chatgpt-api`: main Bridge API on `http://127.0.0.1:8000`
-- `bridge-console`: operator console on `http://127.0.0.1:8080`
+- `gippity-api`: main API on `http://127.0.0.1:8000`
+- `gippity-console`: operator console on `http://127.0.0.1:8080`
 - `character-game`: roleplay game use-case on `http://127.0.0.1:3000`
 
 Images do not bundle your ChatGPT account captures. Mount them from the host.
@@ -28,7 +28,7 @@ Do not commit `secrets/`. The captures contain live browser credentials.
 ## Build
 
 ```sh
-docker build -t chatgpt-api:local .
+docker build -t gippity-bridge:local .
 ```
 
 The Compose stack uses production-style images:
@@ -70,7 +70,7 @@ docker run --rm \
   --env-file .env \
   -v "$PWD/secrets/accounts:/data/secrets/accounts" \
   -v "$PWD/outputs:/data/outputs" \
-  chatgpt-api:local
+  gippity-bridge:local
 ```
 
 Use read-write account mounts if you want the console or CLI to add, update, or
@@ -96,7 +96,7 @@ deployments where account captures are managed outside the container.
 
 `CHATGPT_CONSOLE_COMMAND`
 : Operator command reported by the API for launching the console. Docker default
-  is `docker compose up -d bridge-console`; local development can override it
+  is `docker compose up -d gippity-console`; local development can override it
   with `bun --cwd apps/bridge-console dev`.
 
 `CHATGPT_ACCOUNTS`
@@ -114,7 +114,7 @@ deployments where account captures are managed outside the container.
 
 `CHATGAME_OPENAI_BASE_URL`
 : Server-side API URL used by the character-game container. Docker compose keeps
-  this as the internal service URL `http://chatgpt-api:8000/v1`.
+  this as the internal service URL `http://gippity-api:8000/v1`.
 
 `CHATGAME_PUBLIC_OPENAI_BASE_URL`
 : Browser-facing API URL shown in the game UI and persisted in route settings.
@@ -158,8 +158,8 @@ python3 -m chatgpt_api api chat --message "Reply with exactly: pinned route ok" 
 From inside the container:
 
 ```sh
-docker compose exec chatgpt-api python3 -m chatgpt_api doctor --base-url http://127.0.0.1:8000/v1 --api-key local-dev-key
-docker compose exec chatgpt-api python3 -m chatgpt_api api health --base-url http://127.0.0.1:8000/v1 --api-key local-dev-key
+docker compose exec gippity-api python3 -m chatgpt_api doctor --base-url http://127.0.0.1:8000/v1 --api-key local-dev-key
+docker compose exec gippity-api python3 -m chatgpt_api api health --base-url http://127.0.0.1:8000/v1 --api-key local-dev-key
 ```
 
 ## Account Management
@@ -168,7 +168,7 @@ Add or update an account through the console at `http://127.0.0.1:8080`, or
 paste a capture through the running Docker API:
 
 ```sh
-docker compose exec -it chatgpt-api chatgpt-api admin account add \
+docker compose exec -it gippity-api gippity-bridge admin account add \
   --account main-free \
   --paste \
   --base-url http://127.0.0.1:8000/v1 \
@@ -186,7 +186,7 @@ saving.
 Delete a local account:
 
 ```sh
-docker compose exec chatgpt-api chatgpt-api admin account delete \
+docker compose exec gippity-api gippity-bridge admin account delete \
   --account old-free \
   --base-url http://127.0.0.1:8000/v1 \
   --api-key local-dev-key

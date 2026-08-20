@@ -37,7 +37,7 @@ WORKDIR /app
 ENV NODE_ENV=production \
     HOST=0.0.0.0 \
     PORT=3000 \
-    CHATGAME_OPENAI_BASE_URL=http://chatgpt-api:8000/v1 \
+    CHATGAME_OPENAI_BASE_URL=http://gippity-api:8000/v1 \
     CHATGAME_OPENAI_API_KEY=local-dev-key \
     CHATGAME_AI_MODE=live \
     CHATGAME_DB_PATH=/data/chatgame.sqlite \

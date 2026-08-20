@@ -50,7 +50,12 @@ from chatgpt_api.api.prompts import (
 )
 from chatgpt_api.core.errors import ProviderError
 from chatgpt_api.core.types import ChatRequest, ContentPart, ImageRequest, ImageResponse, Message
-from chatgpt_api.providers.chatgpt.account_info import detect_account_info, infer_account_capabilities, load_settings_file
+from chatgpt_api.providers.chatgpt.account_info import (
+    SOL_MODEL,
+    detect_account_info,
+    infer_account_capabilities,
+    load_settings_file,
+)
 from chatgpt_api.providers.chatgpt.accounts import (
     accounts_dir_from_env,
     list_account_profiles,
@@ -794,6 +799,8 @@ def _account_supports_model(
         return thinking_effort in set(capabilities.get("thinking_efforts") or [])
     if model_slug == "gpt-5-5-pro" and thinking_effort:
         return thinking_effort in set(capabilities.get("pro_efforts") or [])
+    if model_slug == SOL_MODEL and thinking_effort:
+        return thinking_effort in set(capabilities.get("backend_reasoning_efforts") or [])
     return True
 
 
@@ -803,7 +810,7 @@ def run_server(config: OpenAICompatConfig) -> None:
     _configure_account_limits(config, router)
     _admin_store(config)
     server = ThreadingHTTPServer((config.host, config.port), _handler_class(config, router))
-    print(f"chatgpt-api bridge server listening on http://{config.host}:{config.port}")
+    print(f"Gippity Bridge listening on http://{config.host}:{config.port}")
     print(f"accounts={', '.join(accounts)}")
     print(f"account_strategy={router.strategy}")
     print(f"agent_prompt_mode={_normalize_agent_prompt_mode(config.agent_prompt_mode)}")
@@ -825,7 +832,7 @@ def _handler_class(config: OpenAICompatConfig, router: AccountRouter | None = No
     _configure_account_limits(config, router)
 
     class OpenAICompatHandler(BaseHTTPRequestHandler):
-        server_version = "chatgpt-api-openai-compat/0.1"
+        server_version = "gippity-bridge/0.2"
 
         def do_OPTIONS(self) -> None:  # noqa: N802
             _send_cors_preflight(self)
@@ -977,7 +984,7 @@ async def _chat_completion(
     requested_model = _str_or_none(body.get("model")) or "gpt-5-5"
     model, model_agent_mode = _split_model_agent_mode(requested_model)
     agent_prompt_mode = _resolve_agent_prompt_mode(config, body, model_agent_mode)
-    model_slug, thinking_effort = _resolve_model_alias(model, _str_or_none(body.get("thinking_effort")))
+    model_slug, thinking_effort = _resolve_model_alias(model, _request_thinking_effort(body))
     tools = body.get("tools") if isinstance(body.get("tools"), list) else []
     temporary_chat = _resolve_temporary_chat_mode(config, body)
     router = _router_for_request(config, router, body)
@@ -1028,34 +1035,41 @@ async def _chat_completion(
         finally:
             _finish_chatgpt_operation(operation_id)
     prompt = _build_chat_prompt(messages, tools, body.get("tool_choice"), agent_prompt_mode)
+    agent_messages = _agent_prompt_messages_with_images(messages, prompt)
     fallback_model_used: str | None = None
     active_model_slug = model_slug
     active_thinking_effort = thinking_effort
-    try:
-        account, provider, text = await _collect_prompt_text_with_accounts(
+
+    async def collect_agent_text(target_model: str, target_effort: str | None) -> tuple[str, ChatGPTProvider, str]:
+        if agent_messages is not None:
+            return await _collect_messages_text_with_accounts(
+                config,
+                router,
+                agent_messages,
+                requested_model,
+                target_model,
+                target_effort,
+                temporary_chat,
+                operation_id=operation_id,
+            )
+        return await _collect_prompt_text_with_accounts(
             config,
             router,
             prompt,
             requested_model,
-            model_slug,
-            thinking_effort,
+            target_model,
+            target_effort,
             temporary_chat,
             operation_id=operation_id,
         )
+
+    try:
+        account, provider, text = await collect_agent_text(model_slug, thinking_effort)
     except OpenAICompatProviderError as exc:
         fallback_model = _model_fallback_for_config(config, model_slug)
         if fallback_model and _should_try_fallback_model(exc):
             fallback_model_slug, fallback_effort = _resolve_model_alias(fallback_model, None)
-            account, provider, text = await _collect_prompt_text_with_accounts(
-                config,
-                router,
-                prompt,
-                requested_model,
-                fallback_model_slug,
-                fallback_effort,
-                temporary_chat,
-                operation_id=operation_id,
-            )
+            account, provider, text = await collect_agent_text(fallback_model_slug, fallback_effort)
             active_model_slug = fallback_model_slug
             active_thinking_effort = fallback_effort
             fallback_model_used = fallback_model_slug
@@ -1190,7 +1204,7 @@ async def _chat_completion_stream(
     requested_model = _str_or_none(body.get("model")) or "gpt-5-5"
     model, model_agent_mode = _split_model_agent_mode(requested_model)
     agent_prompt_mode = _resolve_agent_prompt_mode(config, body, model_agent_mode)
-    model_slug, thinking_effort = _resolve_model_alias(model, _str_or_none(body.get("thinking_effort")))
+    model_slug, thinking_effort = _resolve_model_alias(model, _request_thinking_effort(body))
     tools = body.get("tools") if isinstance(body.get("tools"), list) else []
     temporary_chat = _resolve_temporary_chat_mode(config, body)
     router = _router_for_request(config, router, body)
@@ -1252,19 +1266,34 @@ async def _chat_completion_stream(
             return
 
         prompt = _build_chat_prompt(messages, tools, body.get("tool_choice"), agent_prompt_mode)
+        agent_messages = _agent_prompt_messages_with_images(messages, prompt)
         streamed = _AgentStreamState(handler, chunk_base)
-        text = await _stream_prompt_text_with_accounts(
-            config,
-            router,
-            prompt,
-            requested_model,
-            model_slug,
-            thinking_effort,
-            temporary_chat,
-            streamed.feed,
-            operation_id=operation.operation_id,
-            on_conversation_id=on_conversation_id,
-        )
+        if agent_messages is not None:
+            _account, _provider, text = await _stream_messages_text_with_accounts(
+                config,
+                router,
+                agent_messages,
+                requested_model,
+                model_slug,
+                thinking_effort,
+                temporary_chat,
+                streamed.feed,
+                operation_id=operation.operation_id,
+                on_conversation_id=on_conversation_id,
+            )
+        else:
+            text = await _stream_prompt_text_with_accounts(
+                config,
+                router,
+                prompt,
+                requested_model,
+                model_slug,
+                thinking_effort,
+                temporary_chat,
+                streamed.feed,
+                operation_id=operation.operation_id,
+                on_conversation_id=on_conversation_id,
+            )
         if streamed.started_content:
             streamed.flush_content()
             _write_sse_finish(handler, chunk_base, "stop")
@@ -1669,7 +1698,7 @@ async def _vision_request(
     input_images = _image_inputs_from_body(body, require=True)
     requested_model = _str_or_none(body.get("model")) or "auto"
     model, _ = _split_model_agent_mode(requested_model)
-    model_slug, thinking_effort = _resolve_model_alias(model, _str_or_none(body.get("thinking_effort")))
+    model_slug, thinking_effort = _resolve_model_alias(model, _request_thinking_effort(body))
     temporary_chat = _resolve_temporary_chat_mode(config, body)
     router = _router_for_request(config, router, body)
     parts = [
@@ -3902,7 +3931,7 @@ def _classify_provider_error(message: str, provider_status: int | None) -> tuple
             "chatgpt_missing_account_capture",
             "invalid_request_error",
             400,
-            "Add or update a ChatGPT account capture from the Bridge Console Accounts page or CLI before making provider calls.",
+            "Add or update a ChatGPT account capture from the Gippity Console Accounts page or CLI before making provider calls.",
         )
     if "cloudflare browser challenge" in normalized:
         return (
@@ -4068,7 +4097,7 @@ def _provider_for_account(
     if not capture_path.exists():
         raise ProviderError(
             f"ChatGPT account capture for '{resolved_account}' is not configured. "
-            "Add one from the Bridge Console Accounts page or run "
+            "Add one from the Gippity Console Accounts page or run "
             "`python3 -m chatgpt_api admin account add --paste --base-url http://127.0.0.1:8000/v1 --api-key local-dev-key`."
         )
     capture = CapturedRequest.from_file(capture_path)
@@ -4406,6 +4435,8 @@ def _models_for_account(config: OpenAICompatConfig, account: str | None = None) 
 
     if "gpt-5-5" in capabilities["supported_models"]:
         models.append({"id": "gpt-5-5", "name": "GPT-5.5"})
+    if SOL_MODEL in capabilities["supported_models"]:
+        models.append({"id": SOL_MODEL, "name": "GPT-5.6 Sol"})
     if capabilities.get("thinking_model"):
         for effort, label in {
             "standard": "Medium",
@@ -4449,6 +4480,12 @@ def _resolve_model_alias(model: str, explicit_effort: str | None) -> tuple[str, 
     if model == "auto":
         return "auto", None
     return model, explicit_effort
+
+
+def _request_thinking_effort(body: dict[str, Any]) -> str | None:
+    """Accept ChatGPT Web's name and OpenAI-compatible clients' field name."""
+
+    return _str_or_none(body.get("thinking_effort")) or _str_or_none(body.get("reasoning_effort"))
 
 
 def _resolve_image_model_alias(model: str) -> str:
@@ -5111,10 +5148,25 @@ def _message_content_to_text(content: Any) -> str:
                 continue
             if item.get("type") == "text" and isinstance(item.get("text"), str):
                 parts.append(item["text"])
-            elif item.get("type") == "image_url":
-                parts.append(f"[image_url:{item.get('image_url')}]")
+            elif item.get("type") in {"image_url", "input_image"}:
+                parts.append("[image attached]")
         return "\n".join(parts)
     return "" if content is None else str(content)
+
+
+def _agent_prompt_messages_with_images(messages: list[Any], prompt: str) -> list[dict[str, Any]] | None:
+    """Attach binary image parts to the tool-bridge prompt instead of stringifying them."""
+
+    image_parts: list[dict[str, Any]] = []
+    for message in messages:
+        if not isinstance(message, dict) or not isinstance(message.get("content"), list):
+            continue
+        for item in message["content"]:
+            if isinstance(item, dict) and item.get("type") in {"image_url", "input_image"}:
+                image_parts.append(dict(item))
+    if not image_parts:
+        return None
+    return [{"role": "user", "content": [*image_parts, {"type": "text", "text": prompt}]}]
 
 
 def _latest_user_message_text(messages: list[Any]) -> str:

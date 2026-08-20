@@ -24,6 +24,7 @@ from chatgpt_api.providers.chatgpt.proof import decode_proof_config, generate_pr
 from chatgpt_api.providers.chatgpt.timezone import local_timezone_payload
 
 MAX_CHATGPT_INPUT_IMAGES = 10
+BACKEND_REASONING_EFFORTS = frozenset({"instant", "medium", "high"})
 
 
 @dataclass(frozen=True, slots=True)
@@ -36,6 +37,10 @@ class ChatGPTEndpoints:
     stop_conversation_url: str = "https://chatgpt.com/backend-api/stop_conversation"
     call_mcp_url: str = "https://chatgpt.com/backend-api/ecosystem/call_mcp"
     websocket_url: str = "https://chatgpt.com/backend-api/celsius/ws/user"
+
+    @property
+    def account_user_setting_url(self) -> str:
+        return f"{self.base_url}/backend-api/settings/account_user_setting"
 
     def stream_status_url(self, conversation_id: str) -> str:
         return f"{self.base_url}/backend-api/conversation/{conversation_id}/stream_status"
@@ -84,6 +89,8 @@ class ChatGPTWebTransport:
     async def stream_chat(self, request: ChatRequest) -> AsyncIterator[ChatDelta]:
         self.ensure_configured()
         headers = self.auth.request_headers()
+        if request.thinking_effort in BACKEND_REASONING_EFFORTS:
+            await asyncio.to_thread(self._set_backend_reasoning_effort, headers, request.thinking_effort)
         payload = self._build_chat_payload_with_uploaded_media(request, headers)
         conversation_url = self.auth.captured_url or self.endpoints.conversation_url
         if self.refresh_web_tokens:
@@ -132,7 +139,7 @@ class ChatGPTWebTransport:
             payload["parent_message_id"] = request.parent_message_id
         if request.variant_purpose:
             payload["variant_purpose"] = request.variant_purpose
-        if request.thinking_effort:
+        if request.thinking_effort and request.thinking_effort not in BACKEND_REASONING_EFFORTS:
             payload["thinking_effort"] = request.thinking_effort
         history_disabled = request.metadata.get("history_and_training_disabled")
         if isinstance(history_disabled, bool):
@@ -576,6 +583,32 @@ class ChatGPTWebTransport:
             if proof_token:
                 refreshed["openai-sentinel-proof-token"] = proof_token
         return refreshed
+
+    def _set_backend_reasoning_effort(self, headers: dict[str, str], effort: str) -> None:
+        """Apply the GPT-5.6 Web effort setting before starting the turn.
+
+        ChatGPT Web stores instant/medium/high as an account user setting; it
+        does not accept those values as a per-conversation thinking_effort.
+        """
+
+        if effort not in BACKEND_REASONING_EFFORTS:
+            raise ProviderError(f"Unsupported ChatGPT Web reasoning effort: {effort}")
+        try:
+            from curl_cffi import requests
+        except ImportError as exc:
+            raise ProviderNotConfigured("curl_cffi is required for ChatGPT Web transport") from exc
+
+        response = requests.patch(
+            self.endpoints.account_user_setting_url,
+            params={"feature": "wingman_thinking_effort", "value": effort},
+            headers=_account_setting_headers(headers),
+            impersonate=self.impersonate,
+            timeout=min(float(self.timeout), 30.0),
+        )
+        if response.status_code >= 400:
+            raise ProviderError(
+                f"ChatGPT Web effort setting failed: {response.status_code} {_body_preview(response)}"
+            )
 
     def _post_conversation(
         self,
@@ -1252,6 +1285,30 @@ def _conversation_headers(headers: dict[str, str]) -> dict[str, str]:
     }
     replay["accept"] = "text/event-stream"
     replay["content-type"] = "application/json"
+    return replay
+
+
+def _account_setting_headers(headers: dict[str, str]) -> dict[str, str]:
+    blocked = {
+        "accept",
+        "content-length",
+        "content-type",
+        "host",
+        "openai-sentinel-arkose-token",
+        "openai-sentinel-chat-requirements-token",
+        "openai-sentinel-proof-token",
+        "openai-sentinel-turnstile-token",
+        "x-conduit-token",
+        "x-oai-turn-trace-id",
+        "x-openai-target-path",
+        "x-openai-target-route",
+    }
+    replay = {
+        name: value
+        for name, value in headers.items()
+        if name not in blocked and _is_replayable_request_header(name)
+    }
+    replay["accept"] = "application/json"
     return replay
 
 

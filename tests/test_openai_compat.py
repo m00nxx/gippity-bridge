@@ -12,6 +12,7 @@ from chatgpt_api.api.openai_compat import (
     OpenAICompatConfig,
     OpenAICompatProviderError,
     _account_order_for_model,
+    _agent_prompt_messages_with_images,
     _build_chat_prompt,
     _chat_image_intercept_enabled,
     _classify_provider_error,
@@ -35,6 +36,7 @@ from chatgpt_api.api.openai_compat import (
     _resolve_agent_prompt_mode,
     _resolve_image_model_alias,
     _resolve_model_alias,
+    _request_thinking_effort,
     _should_retry_for_missing_tool_call,
     _split_model_agent_mode,
     _tool_call_policy_issue,
@@ -53,6 +55,11 @@ def test_resolve_model_alias_maps_intelligence_presets():
     assert _resolve_model_alias("chatgpt-deep-research", None) == ("auto", None)
     assert _resolve_model_alias("chatgpt-web/chatgpt-deep-research", None) == ("auto", None)
     assert _resolve_model_alias("auto", None) == ("auto", None)
+
+
+def test_request_thinking_effort_accepts_openai_compatible_field():
+    assert _request_thinking_effort({"reasoning_effort": "high"}) == "high"
+    assert _request_thinking_effort({"thinking_effort": "medium", "reasoning_effort": "high"}) == "medium"
 
 
 def test_resolve_image_model_alias_maps_openai_names_to_auto():
@@ -1496,6 +1503,28 @@ def test_build_chat_prompt_opencode_uses_full_tools():
     assert "AVAILABLE_TOOLS:" in prompt
     assert "CONVERSATION_TRANSCRIPT" in prompt
     assert "AVAILABLE_TOOLS_COMPACT" not in prompt
+
+
+def test_agent_prompt_keeps_image_binary_out_of_text_and_attaches_it():
+    data_url = "data:image/png;base64," + ("A" * 5000)
+    messages = [
+        {
+            "role": "user",
+            "content": [
+                {"type": "image_url", "image_url": {"url": data_url}},
+                {"type": "text", "text": "Describe this image"},
+            ],
+        }
+    ]
+
+    prompt = _build_chat_prompt(messages, [], "auto", "optimized")
+    agent_messages = _agent_prompt_messages_with_images(messages, prompt)
+
+    assert data_url not in prompt
+    assert "[image attached]" in prompt
+    assert agent_messages is not None
+    assert agent_messages[0]["content"][0]["image_url"]["url"] == data_url
+    assert agent_messages[0]["content"][-1] == {"type": "text", "text": prompt}
 
 
 def test_models_with_agent_modes_adds_suffix_aliases():

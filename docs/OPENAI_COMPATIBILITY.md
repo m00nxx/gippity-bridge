@@ -1,4 +1,4 @@
-# OpenAI-Shaped API
+# Gippity Bridge OpenAI-shaped API
 
 The local server exposes an OpenAI-shaped API backed by a selected ChatGPT Web
 account.
@@ -10,7 +10,7 @@ moving to a stricter production provider.
 ## Local Test Endpoint
 
 ```sh
-CHATGPT_API_KEY=local-dev-key chatgpt-api serve --port 8000
+CHATGPT_API_KEY=local-dev-key gippity-bridge serve --port 8000
 ```
 
 ```text
@@ -270,7 +270,7 @@ Response:
     {
       "url": "http://127.0.0.1:8000/v1/chatgpt/files/file_icon/icon.png",
       "download_url": "http://127.0.0.1:8000/v1/chatgpt/files/file_icon/icon.png",
-      "path": "/Users/work/Desktop/chatgpt-api/outputs/chatgpt-images/icon.png",
+      "path": "/Users/work/Desktop/gippity-bridge/outputs/chatgpt-images/icon.png",
       "filename": "icon.png",
       "content_type": "image/png"
     }
@@ -428,7 +428,7 @@ Response:
     {
       "url": "http://127.0.0.1:8000/v1/chatgpt/files/file_edit/edited.png",
       "download_url": "http://127.0.0.1:8000/v1/chatgpt/files/file_edit/edited.png",
-      "path": "/Users/work/Desktop/chatgpt-api/outputs/chatgpt-images/edited.png",
+      "path": "/Users/work/Desktop/gippity-bridge/outputs/chatgpt-images/edited.png",
       "filename": "edited.png",
       "content_type": "image/png"
     }
@@ -447,7 +447,7 @@ locally. API clients should prefer the returned HTTP download URL:
     {
       "url": "http://127.0.0.1:8000/v1/chatgpt/files/file_cat/cat.png",
       "download_url": "http://127.0.0.1:8000/v1/chatgpt/files/file_cat/cat.png",
-      "path": "/Users/work/Desktop/chatgpt-api/outputs/chatgpt-images/cat.png",
+      "path": "/Users/work/Desktop/gippity-bridge/outputs/chatgpt-images/cat.png",
       "filename": "cat.png"
     }
   ]
@@ -492,7 +492,7 @@ Response:
     {
       "message": {
         "role": "assistant",
-        "content": "Done. Deep Research report saved.\npath=/Users/work/Desktop/chatgpt-api/outputs/chatgpt-research/llm-agi.md\ndownload_url=http://127.0.0.1:8000/v1/chatgpt/files/file_research/llm-agi.md"
+        "content": "Done. Deep Research report saved.\npath=/Users/work/Desktop/gippity-bridge/outputs/chatgpt-research/llm-agi.md\ndownload_url=http://127.0.0.1:8000/v1/chatgpt/files/file_research/llm-agi.md"
       },
       "finish_reason": "stop"
     }
